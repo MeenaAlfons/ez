@@ -1,0 +1,16 @@
+{
+  "name": "webservice",
+  "version": "1.0.0",
+  "description": "Example web service",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "8.0.0"
+  },
+  "author": "Meena Alfons",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}
