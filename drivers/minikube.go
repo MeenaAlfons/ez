@@ -13,6 +13,7 @@ import (
 
 //
 type Minikube interface {
+	Install() bool
 	Start(profile string) bool
 	Stop(profile string) bool
 	Status(profile string) string
@@ -39,7 +40,7 @@ func (m *minikube) Start(profile string) bool {
 
 	// out, err := exec.Command("minikube", "start", "--profile", profile).CombinedOutput()
 
-	ok := utils.RunCommandWithStdout("minikube", "start", "--profile", profile)
+	ok := utils.RunCommandWithStdout(MinikubeFilename, "start", "--profile", profile)
 
 	if !ok {
 		fmt.Println("minikube failed to start a cluster with profile " + profile)
@@ -54,7 +55,7 @@ func (m *minikube) Start(profile string) bool {
 func (m *minikube) Stop(profile string) bool {
 	// TODO Make validations on the profile string
 
-	out, err := exec.Command("minikube", "stop", "--profile", profile).CombinedOutput()
+	out, err := exec.Command(MinikubeFilename, "stop", "--profile", profile).CombinedOutput()
 	if err != nil {
 		fmt.Println("minikube failed to stop a cluster with profile " + profile)
 		fmt.Println("The following is the output of minikube:")
@@ -73,7 +74,7 @@ func (m *minikube) Stop(profile string) bool {
 //
 func (m *minikube) Status(profile string) string {
 
-	statusCmd := "minikube status --profile " + profile
+	statusCmd := MinikubeFilename + " status --profile " + profile
 	ok, out := utils.RunInShellWithStdoutAndCapture(statusCmd)
 	if !ok {
 		return "Error happend while retrieving status"
@@ -124,6 +125,26 @@ func (m *minikube) ServiceInfo(profile, serviceName string) (exists bool, status
 	return
 }
 
+//
+func (m *minikube) Install() bool {
+
+	minikubePath := utils.BinDir + MinikubeFilename
+
+	err := utils.DownloadFile(minikubePath, MinikubeUrl)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	err = os.Chmod(minikubePath, os.FileMode(755))
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return m.kubectl.Install()
+}
+
 func moveDockerImage(imageName, toHostIp string) bool {
 	toHost := "tcp://" + toHostIp + ":2376"
 
@@ -153,7 +174,7 @@ func moveDockerImageOld(imageName, toProfile string) bool {
 
 	saveCmd := "docker save -o " + tarPath + " " + imageName
 	loadCmd := "docker load -i " + tarPath
-	changeEnvCmd := utils.GetEvalCmd("minikube docker-env --profile " + toProfile)
+	changeEnvCmd := utils.GetEvalCmd(MinikubeFilename + " docker-env --profile " + toProfile)
 	uploadImageToClusterCmd := saveCmd + " && (" + changeEnvCmd + ") && " + loadCmd
 
 	// fmt.Println("Command: " + uploadImageToClusterCmd)
@@ -166,7 +187,7 @@ func moveDockerImageOld(imageName, toProfile string) bool {
 
 func getIp(profile string) string {
 	ip := ""
-	out, err := exec.Command("minikube", "ip", "--profile", profile).CombinedOutput()
+	out, err := exec.Command(MinikubeFilename, "ip", "--profile", profile).CombinedOutput()
 	if err == nil {
 		ip = strings.Trim(string(out), " \r\n\t")
 	}

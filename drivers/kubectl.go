@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"os"
+
 	"github.com/MeenaAlfons/ez/data"
 	"github.com/MeenaAlfons/ez/utils"
 )
 
 //
 type Kubectl interface {
+	Install() bool
 	UseContext(profile string) bool
 	Deploy(profile, serviceName, imageName string, replicas int) bool
 }
@@ -26,8 +29,28 @@ func MakeKubectl() Kubectl {
 }
 
 //
+func (k *kubectl) Install() bool {
+
+	kubectlPath := utils.BinDir + KubectlFilename
+
+	err := utils.DownloadFile(kubectlPath, KubectlUrl)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	err = os.Chmod(kubectlPath, os.FileMode(755))
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+//
 func (k *kubectl) UseContext(profile string) bool {
-	useContextCmd := "kubectl config use-context " + profile
+	useContextCmd := KubectlFilename + " config use-context " + profile
 	return utils.RunInShellWithStdout(useContextCmd)
 }
 
@@ -38,7 +61,7 @@ func (k *kubectl) Deploy(profile, serviceName, imageName string, replicas int) b
 
 	deployment := getDeploymentOfService(serviceName, imageName, replicas)
 
-	return utils.RunInShellWithStdoutAndStdin("kubectl --context "+profile+" apply -f -", deployment)
+	return utils.RunInShellWithStdoutAndStdin(KubectlFilename+" --context "+profile+" apply -f -", deployment)
 }
 
 func getDeploymentOfService(serviceName, imageName string, replicas int) string {
