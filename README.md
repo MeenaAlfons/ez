@@ -1,4 +1,10 @@
+# ez
 
+Never been easier to deploy and test your microservices application localling. 
+
+# Usage
+
+To be continued ...
 
 # Build
 
@@ -7,16 +13,19 @@
 # To Be Done
 
 - installation
-  - install specific version of minikube and kubernetes
+- install specific version of minikube and kubernetes
 
+# In Progress
 
+The following are in progress work.
 
+```
 go run main.go cluster stop -n tell
-  go run main.go service set -n myservice -i myimage -r 5 -c mycluster
+go run main.go service set -n myservice -i myimage -r 5 -c mycluster
 
-  minikube stop --profile dev
+minikube stop --profile dev
 
-  @FOR /f "tokens=*" %i IN ('minikube docker-env --profile dodo') DO @%i
+@FOR /f "tokens=*" %i IN ('minikube docker-env --profile dodo') DO @%i
 
   
 
@@ -48,3 +57,4 @@ main.go service set -n .. -c .. -i .. -r
 
 minikube dashboard --url --profile dody
 kubectl config use-context dody
+```
